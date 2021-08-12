@@ -2,9 +2,14 @@ package com.hyejineee.rssreader
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
+import android.view.View
 import androidx.databinding.DataBindingUtil
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.hyejineee.rssreader.databinding.ActivityMainBinding
+import com.hyejineee.rssreader.model.Article
+import com.hyejineee.rssreader.model.Feed
+import com.hyejineee.rssreader.producer.ArticleProducer
 import kotlinx.coroutines.*
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -13,70 +18,62 @@ import javax.xml.parsers.DocumentBuilderFactory
 @ExperimentalCoroutinesApi
 @ObsoleteCoroutinesApi
 @DelicateCoroutinesApi
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ArticleAdapter.ArticleLoader {
 
     private lateinit var binding: ActivityMainBinding
 
-    private val dispatcher = newFixedThreadPoolContext(2, name = "IO")
-
-    private val documentFactory = DocumentBuilderFactory.newInstance()
-
-    private val feeds = listOf(
-        "https://www.npr.org/rss/rss.php?id=1001",
-        "http://rss.cnn.com/rss/cnn_topstories.rss",
-        "http://feeds.foxnews.com/foxnews/politics?format=xml",
-        "httpa://feeds.foxnews.com/foxnews/politics?format=xml",
-    )
+    private val articleAdapter = ArticleAdapter(loader = this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
-        asyncLoadNews()
+        binding.listMainArticles.apply {
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            adapter = articleAdapter
+
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+
+                    val lastVisiblePosition =
+                        (recyclerView.layoutManager as LinearLayoutManager)
+                            .findLastCompletelyVisibleItemPosition()
+
+                    val lastItemPosition = articleAdapter.itemCount - 1
+
+                    if (lastItemPosition == lastVisiblePosition &&
+                        articleAdapter.getItemViewType(lastItemPosition) != ItemViewType.LOADING_ITEM_VIEW.get()
+                    ) {
+                        articleAdapter.loading()
+                        recyclerView.scrollToPosition(articleAdapter.itemCount-1)
+
+                    }
+                }
+            })
+        }
+
+        GlobalScope.launch{
+            loadMore()
+        }
 
 
     }
 
-    private fun asyncLoadNews() = GlobalScope.launch{
-        val requests = mutableListOf<Deferred<List<String>>>()
-        feeds.mapTo(requests){
-            asyncFetchHeadlines(it, dispatcher)
-        }
 
-        requests.forEach { it.join() }
+    override suspend fun loadMore() {
 
-        val headlines = requests
-            .filter{ !it.isCancelled } // 취소 중이거나 최소됨 상태가 아닌 디퍼드만
-            .flatMap { it.getCompleted() }
+        val producer = ArticleProducer.producer
 
-        val failed = requests.filter{it.isCancelled}.size
+        if(!producer.isClosedForReceive){
+            val articles = producer.receive()
 
-        launch(Dispatchers.Main){
-            binding.tvMainNumberOfProcessing.text = "Found ${headlines.size} News" +
-                    "in ${requests.size} feeds"
-
-            if(failed > 0){
-                binding.tvMainFailedNumberOfProcessing.text = "Failed to fetch ${failed} feeds"
+            GlobalScope.launch(Dispatchers.Main){
+                delay(2000)
+                articleAdapter.stopLoading()
+                articleAdapter.addAll(articles)
             }
         }
     }
-
-    private fun asyncFetchHeadlines(feed: String, dispatcher: CoroutineDispatcher) =
-        GlobalScope.async(dispatcher) {
-            val builder = documentFactory.newDocumentBuilder()
-            val xml = builder.parse(feed)
-            val news = xml.getElementsByTagName("channel").item(0)
-
-            (0 until news.childNodes.length)
-                .asSequence()
-                .map { news.childNodes.item(it) }
-                .filter { Node.ELEMENT_NODE == it.nodeType }
-                .map { it as Element }
-                .filter { "item" == it.tagName }
-                .map {
-                    it.getElementsByTagName("title").item(0).textContent
-                }
-                .toList()
-        }
 
 }

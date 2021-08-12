@@ -11,37 +11,28 @@
         android:layout_height="match_parent"
         tools:context=".MainActivity">
 
-        <ProgressBar
-            android:id="@+id/progress_main"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+<!--        <ProgressBar-->
+<!--            android:id="@+id/progress_main"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            app:layout_constraintTop_toTopOf="parent"-->
+<!--            app:layout_constraintBottom_toBottomOf="parent"-->
+<!--            app:layout_constraintLeft_toLeftOf="parent"-->
+<!--            app:layout_constraintRight_toRightOf="parent"-->
+<!--            />-->
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/list_main_articles"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            />
+            >
 
+        </androidx.recyclerview.widget.RecyclerView>
 
-        <TextView
-            android:id="@+id/tv_main_number_of_processing"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Hello World!"
-            app:layout_constraintVertical_bias="0.1"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/progress_main" />
-
-        <TextView
-            android:id="@+id/tv_main_failed_number_of_processing"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/tv_main_number_of_processing"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintVertical_bias="0.1"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
