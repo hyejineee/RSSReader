@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+
 import androidx.recyclerview.widget.RecyclerView
 import com.hyejineee.rssreader.databinding.ActivityMainBinding
 import com.hyejineee.rssreader.model.Article
@@ -32,6 +33,7 @@ class MainActivity : AppCompatActivity(), ArticleAdapter.ArticleLoader {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = articleAdapter
 
+
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
@@ -57,13 +59,14 @@ class MainActivity : AppCompatActivity(), ArticleAdapter.ArticleLoader {
             loadMore()
         }
 
-
     }
 
 
     override suspend fun loadMore() {
 
+
         val producer = ArticleProducer.producer
+
 
         if(!producer.isClosedForReceive){
             val articles = producer.receive()
@@ -75,5 +78,4 @@ class MainActivity : AppCompatActivity(), ArticleAdapter.ArticleLoader {
             }
         }
     }
-
 }

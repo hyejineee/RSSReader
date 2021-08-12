@@ -7,4 +7,5 @@ data class Article(
     val title: String="",
     val summary: String="",
     val viewType: ItemViewType = ItemViewType.ITEM_VIEW,
+
 )

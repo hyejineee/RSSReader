@@ -21,6 +21,7 @@
 <!--            app:layout_constraintRight_toRightOf="parent"-->
 <!--            />-->
 
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/list_main_articles"
             android:layout_width="match_parent"

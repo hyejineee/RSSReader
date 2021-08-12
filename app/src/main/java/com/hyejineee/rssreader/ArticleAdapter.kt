@@ -37,6 +37,7 @@ class ArticleAdapter(
         this.notifyDataSetChanged()
     }
 
+
     fun loading() {
         loading = true
         articles.add(
