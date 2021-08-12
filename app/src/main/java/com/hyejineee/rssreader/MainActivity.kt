@@ -5,9 +5,12 @@ import android.os.Bundle
 import android.view.View
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+
+import androidx.recyclerview.widget.RecyclerView
 import com.hyejineee.rssreader.databinding.ActivityMainBinding
 import com.hyejineee.rssreader.model.Article
 import com.hyejineee.rssreader.model.Feed
+import com.hyejineee.rssreader.producer.ArticleProducer
 import kotlinx.coroutines.*
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -16,22 +19,11 @@ import javax.xml.parsers.DocumentBuilderFactory
 @ExperimentalCoroutinesApi
 @ObsoleteCoroutinesApi
 @DelicateCoroutinesApi
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ArticleAdapter.ArticleLoader {
 
     private lateinit var binding: ActivityMainBinding
 
-    private val dispatcher = newFixedThreadPoolContext(2, name = "IO")
-
-    private val documentFactory = DocumentBuilderFactory.newInstance()
-
-    private val feeds = listOf(
-        Feed("npr", "https://www.npr.org/rss/rss.php?id=1001"),
-        Feed("cnn","http://rss.cnn.com/rss/cnn_topstories.rss"),
-        Feed("fox","http://feeds.foxnews.com/foxnews/politics?format=xml"),
-        Feed("inv","httpa://feeds.foxnews.com/foxnews/politics?format=xml"),
-    )
-
-    private val articleAdapter = ArticleAdapter()
+    private val articleAdapter = ArticleAdapter(loader = this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,52 +32,50 @@ class MainActivity : AppCompatActivity() {
         binding.listMainArticles.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = articleAdapter
-        }
 
-        asyncLoadNews()
 
-    }
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
 
-    private fun asyncLoadNews() = GlobalScope.launch{
-        val requests = mutableListOf<Deferred<List<Article>>>()
-        feeds.mapTo(requests){
-            asyncFetchArticles(it, dispatcher)
-        }
+                    val lastVisiblePosition =
+                        (recyclerView.layoutManager as LinearLayoutManager)
+                            .findLastCompletelyVisibleItemPosition()
 
-        requests.forEach { it.join() }
+                    val lastItemPosition = articleAdapter.itemCount - 1
 
-        val articles = requests
-            .filter{ !it.isCancelled } // 취소 중이거나 최소됨 상태가 아닌 디퍼드만
-            .flatMap { it.getCompleted() }
+                    if (lastItemPosition == lastVisiblePosition &&
+                        articleAdapter.getItemViewType(lastItemPosition) != ItemViewType.LOADING_ITEM_VIEW.get()
+                    ) {
+                        articleAdapter.loading()
+                        recyclerView.scrollToPosition(articleAdapter.itemCount-1)
 
-        val failed = requests.filter{it.isCancelled}.size
-
-        launch(Dispatchers.Main){
-           (binding.listMainArticles.adapter as ArticleAdapter).addAll(articles)
-            binding.progressMain.visibility = View.GONE
-        }
-    }
-
-    private fun asyncFetchArticles(feed: Feed, dispatcher: CoroutineDispatcher) =
-        GlobalScope.async(dispatcher) {
-
-            delay(1000)
-            val builder = documentFactory.newDocumentBuilder()
-            val xml = builder.parse(feed.url)
-            val news = xml.getElementsByTagName("channel").item(0)
-
-            (0 until news.childNodes.length)
-                .asSequence()
-                .map { news.childNodes.item(it) }
-                .filter { Node.ELEMENT_NODE == it.nodeType }
-                .map { it as Element }
-                .filter { "item" == it.tagName }
-                .map {
-                    val title = it.getElementsByTagName("title").item(0).textContent
-                    val summary = it.getElementsByTagName("description").item(0).textContent
-                    Article(title = title, summary = summary, feed = feed.name)
+                    }
                 }
-                .toList()
+            })
         }
 
+        GlobalScope.launch{
+            loadMore()
+        }
+
+    }
+
+
+    override suspend fun loadMore() {
+
+
+        val producer = ArticleProducer.producer
+
+
+        if(!producer.isClosedForReceive){
+            val articles = producer.receive()
+
+            GlobalScope.launch(Dispatchers.Main){
+                delay(2000)
+                articleAdapter.stopLoading()
+                articleAdapter.addAll(articles)
+            }
+        }
+    }
 }
