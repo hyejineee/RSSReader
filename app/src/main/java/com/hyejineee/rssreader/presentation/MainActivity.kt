@@ -1,20 +1,17 @@
-package com.hyejineee.rssreader
+package com.hyejineee.rssreader.presentation
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 
 import androidx.recyclerview.widget.RecyclerView
+import com.hyejineee.rssreader.ArticleAdapter
+import com.hyejineee.rssreader.ItemViewType
+import com.hyejineee.rssreader.R
 import com.hyejineee.rssreader.databinding.ActivityMainBinding
-import com.hyejineee.rssreader.model.Article
-import com.hyejineee.rssreader.model.Feed
 import com.hyejineee.rssreader.producer.ArticleProducer
 import kotlinx.coroutines.*
-import org.w3c.dom.Element
-import org.w3c.dom.Node
-import javax.xml.parsers.DocumentBuilderFactory
 
 @ExperimentalCoroutinesApi
 @ObsoleteCoroutinesApi
