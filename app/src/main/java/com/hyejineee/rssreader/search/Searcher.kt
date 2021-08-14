@@ -65,8 +65,9 @@ class Searcher {
                 Article(feed.name, title, summary)
             }
             .toList()
-            .map {
+            .forEach {
                 channel.send(it)
+                ResultCounter.increment()
             }
 
     }

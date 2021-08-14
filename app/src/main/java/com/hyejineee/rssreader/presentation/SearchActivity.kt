@@ -7,10 +7,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.hyejineee.rssreader.ArticleAdapter
 import com.hyejineee.rssreader.R
 import com.hyejineee.rssreader.databinding.ActivitySearchBinding
+import com.hyejineee.rssreader.search.ResultCounter
 import com.hyejineee.rssreader.search.Searcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.actor
 
 class SearchActivity : AppCompatActivity() {
 
@@ -23,6 +23,10 @@ class SearchActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_search)
 
+        GlobalScope.launch {
+            updateCounter()
+        }
+
         binding.listSearchAcResult.apply {
             layoutManager = LinearLayoutManager(this@SearchActivity)
             adapter = articleAdapter
@@ -31,6 +35,7 @@ class SearchActivity : AppCompatActivity() {
         binding.buttonSearchAcSearch.setOnClickListener {
             articleAdapter.clear()
             GlobalScope.launch {
+                ResultCounter.reset()
                 search()
             }
         }
@@ -46,6 +51,18 @@ class SearchActivity : AppCompatActivity() {
 
             GlobalScope.launch(Dispatchers.Main) {
                 articleAdapter.add(article)
+            }
+        }
+    }
+
+    private suspend fun updateCounter(){
+        val notification = ResultCounter.notification
+        while(!notification.isClosedForReceive){
+            val newAmount = notification.receive()
+
+            withContext(Dispatchers.Main){
+                binding.count = newAmount
+                binding.executePendingBindings()
             }
         }
     }
