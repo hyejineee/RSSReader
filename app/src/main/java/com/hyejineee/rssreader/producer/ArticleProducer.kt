@@ -23,8 +23,6 @@ object ArticleProducer {
     private val documentFactory = DocumentBuilderFactory.newInstance()
 
     private fun fetchArticles(feed: Feed):List<Article> {
-
-
         val builder = documentFactory.newDocumentBuilder()
         val xml = builder.parse(feed.url)
         val news = xml.getElementsByTagName("channel").item(0)
