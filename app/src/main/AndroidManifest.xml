@@ -15,11 +15,13 @@
 
         <activity
             android:name=".presentation.MainActivity"
-            android:exported="true">
+            >
 
         </activity>
 
-        <activity android:name=".presentation.SearchActivity">
+        <activity
+            android:name=".presentation.SearchActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -11,7 +11,11 @@ import kotlinx.coroutines.launch
 
 class ArticleAdapter(
     private val articles: MutableList<Article> = mutableListOf(),
-    private val loader: ArticleLoader
+    private val loader: ArticleLoader = object : ArticleLoader {
+        override suspend fun loadMore() {
+            //
+        }
+    }
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var loading = false
@@ -35,6 +39,16 @@ class ArticleAdapter(
     fun addAll(items: List<Article>) {
         articles.addAll(items)
         this.notifyDataSetChanged()
+    }
+
+    fun add(item : Article){
+        articles.add(item)
+        notifyDataSetChanged()
+    }
+
+    fun clear(){
+        articles.clear()
+        notifyDataSetChanged()
     }
 
 
