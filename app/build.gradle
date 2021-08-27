@@ -1,6 +1,8 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'kotlin-kapt'
+    id 'dagger.hilt.android.plugin'
 }
 
 android {
@@ -46,4 +48,25 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0'
+
+    def coroutine_version = "1.5.1"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutine_version"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutine_version"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0'
+
+    def ktx_version ="2.3.1"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$ktx_version"
+
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$ktx_version"
+
+    def kotest_version ="4.6.2"
+    testImplementation  "io.kotest:kotest-runner-junit5:$kotest_version"
+
+    implementation("com.google.dagger:hilt-android:2.38.1")
+    kapt("com.google.dagger:hilt-android-compiler:2.38.1")
+
+}
+
+kapt {
+    correctErrorTypes true
 }
